@@ -53,7 +53,6 @@ app.use('/css', static(path.join(__dirname, 'css')));
  //게시판과 답글 스키마
 var Board = require('./models/board');
 var Comment = require('./models/comment');
-
 app.use('/models', static(path.join(__dirname, 'models')));
 
 // cookie-parser 설정
@@ -196,7 +195,7 @@ router.route('/process/login').post(function(req,res){
     var paramCellphoneNo = req.body.cellphoneNo || req.query.cellphoneNo;
  
     if(database){
-        authUser(database, paramId, paramPassword,function(err, docs){
+        authUser(database, paramId, paramPassword, function(err, docs){
             if(err) {throw err;}
             //로그인 성공시
             if(docs){
@@ -239,6 +238,7 @@ router.post('/userInfo', function(req, res, next) {
     if(req.session.user){
         var user = req.session.user;
         res.render('userInfo',{user: user});
+
     }
 });
 // 로그아웃 라우팅 함수 - 로그아웃 후 세션 삭제함
@@ -321,11 +321,9 @@ router.post('/board/write', function (req, res) {
     var user = req.session.user;
     board.title = req.body.title;
     board.contents = req.body.contents;
-    board.shareG = req.body.shareG;
-    board.salePrice = req.body.salePrice;
-    board.airline = req.body.airline;
-    board.flight = req.body.flight;
     board.id = user.id
+    board.region = req.body.region;
+    board.region1 = req.body.region1;
     board.save(function (err) {
         if(err){
             console.log(err);

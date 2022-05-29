@@ -10,12 +10,11 @@
             <input type = "submit" value = "Home" class="nav-item" name = ""/>
         </form>
         <form method="post" action="/" class="nav-item">
-            <input type = "submit" value = "수화물 공유" class="nav-item" name = ""/>
+            <input type = "submit" value = "자유 게시판" class="nav-item" name = ""/>
         </form>
         <form method="post" action="/c" class="nav-item">
-          <input type = "submit" value = "채팅방" class="nav-item" name = ""/>
+          <input type = "submit" value = "여행톡" class="nav-item" name = ""/>
       </form>
-      <a href="/public/automatch.html" method="post" class="nav-item" >자동매칭</a>
       <a href="/public/report.html" method="post" class="nav-item" >신고하기</a>
       <a href="/process/logout" method="post" class="nav-item" >로그아웃</a>
         <span class="nav-indicator"></span>
@@ -24,34 +23,25 @@
 
 <br><br><br><br><br><br><br><br> <h2>작성자 : <%= board.id %></h2>
   <form action="/" method="post">
-      <div class="text">항공사</div>
+
+      <div class="text">여행지역</div>
       <div class="textForm">
-          <a><%= board.airline %></a>
+          <a><%= board.region1 %></a>
       </div> <br>
 
-      <div class="text">항공편</div>
+      <div class="text">여행지</div>
       <div class="textForm">
-          <a><%= board.flight %></a>
-      </div> <br>
-
-      <div class="text">수하물 공유 용량</div>
-      <div class="textForm">
-          <a> <%= board.shareG %>g</a>
-      </div> <br>
-
-      <div class="text">판매 금액</div>
-      <div class="textForm">
-          <a> <%= board.salePrice %>원(g당)</a>
+          <a> <%= board.region %></a>
       </div> <br>
 
       <div class="text">제목</div>
       <div class="textForm">
-          <a><%= board.title %></a>
+        <textarea name="title" cols="40" disabled><%= board.title %></textarea>
+        <!--<input name="title" type="text" >-->
       </div> <br>
-
       <div class="text">내용</div>
       <div class="textForm">
-          <a> <%= board.contents %></a>
+        <textarea name="contents" rows="21" cols="140" disabled><%= board.contents %></textarea>
       </div> <br>
       <input type="submit" class="button" value="목록">
   </form>

@@ -7,13 +7,13 @@
     <table class="nav_table">
         <nav class="nav">
             <form method="post" action="/home" class="nav-item">
-                <input type = "submit" value = "Home" class="nav-item" name = ""/>
+                <input type = "submit" value = "홈" class="nav-item" name = ""/>
             </form>
             <form method="post" action="/" class="nav-item">
-                <input type = "submit" value = "수화물 공유" class="nav-item" name = ""/>
+                <input type = "submit" value = "자유 게시판" class="nav-item" name = ""/>
             </form>
             <form method="post" action="/c" class="nav-item">
-                <input type = "submit" value = "채팅방" class="nav-item" name = ""/>
+                <input type = "submit" value = "여행톡" class="nav-item" name = ""/>
             </form>
             <a href="/public/automatch.html" method="post" class="nav-item" >자동매칭</a>
             <a href="/public/report.html" method="post" class="nav-item" >신고하기</a>
@@ -22,36 +22,29 @@
         </nav>
     </table>  
     
-    <br><br><br><br><br><br><br><br> <h2>수하물 공유 등록</h2><br>
+    <br><br><br><br><br><br><br><br> <h2>글쓰기</h2><br>
     <form action="/board/write" method="post">
-        <div class="text">항공사 입력</div>
         <div class="textForm">
-            <input name="airline" type="text">
+            <select id="region1" name="region1">
+                <option name="여행지역선택" value="여행지역선택">여행지역선택</option>
+                <option name="경기도"value="경기도">경기도</option>
+                <option name="강원도"value="강원도">강원도</option>
+                <option name="충청도"value="충청도">충청도</option>
+                <option name="경상도"value="경상도">경상도</option>
+                <option name="전라도"value="전라도">전라도</option>
+            </select>
+        </div> <br>
+        <div class="textForm">
+            <textarea name="region" cols="40" placeholder="여행지"></textarea>
+            <!--<input name="title" type="text" >-->
+        </div> <br>
+        <div class="textForm">
+            <textarea name="title" cols="140" placeholder="글 제목"></textarea>
+            <!--<input name="title" type="text" >-->
         </div> <br>
 
-        <div class="text">항공편</div>
         <div class="textForm">
-            <input name="flight" type="text">
-        </div> <br>
-
-        <div class="text">수하물 공유 용량</div>
-        <div class="textForm">
-            <input name="shareG" type="text" id="shareG" placeholder="g 단위">
-        </div> <br>
-
-        <div class="text">판매 금액</div>
-        <div class="textForm">
-            <input name="salePrice" type="text" placeholder="1g당 가격">
-        </div> <br>
-
-        <div class="text">제목</div>
-        <div class="textForm">
-            <input name="title" type="text">
-        </div> <br>
-
-        <div class="text">내용</div>
-        <div class="textForm">
-            <textarea name="contents" rows="7" cols="70"> </textarea>
+            <textarea name="contents" rows="21" cols="140" placeholder="글 내용"></textarea>
         </div> <br>
         <input type="submit" class="button" value="작성 완료">
     </form>

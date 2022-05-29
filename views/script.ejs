@@ -1,0 +1,868 @@
+<script 
+      type="text/javascript" 
+      src="//dapi.kakao.com/v2/maps/sdk.js?appkey=0b1ef046dc6cb021eb05a723896aa434&libraries=services">
+      
+    </script>
+    <script>
+      var markers = [];
+      var mapContainer = document.getElementById('map'); //지도를 담을 영역의 DOM 레퍼런스
+          mapOption = { //지도를 생성할 때 필요한 기본 옵션
+	          center: new kakao.maps.LatLng(35.1379222, 129.05562775), //지도의 중심좌표.
+	          level: 8 //지도의 레벨(확대, 축소 정도)
+          };
+var map = new kakao.maps.Map(mapContainer, mapOption); //지도 생성 및 객체 리턴
+// 지도에 확대 축소 컨트롤을 생성
+let zoomControl = new kakao.maps.ZoomControl();
+// 지도의 우측에 확대 축소 컨트롤을 추가
+map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+
+// 지도를 생성합니다    
+//var map = new kakao.maps.Map(mapContainer, mapOption); 
+// 장소 검색 객체를 생성합니다
+var ps = new kakao.maps.services.Places();  
+
+// 검색 결과 목록이나 마커를 클릭했을 때 장소명을 표출할 인포윈도우를 생성합니다
+var infowindow = new kakao.maps.InfoWindow({zIndex:1});
+
+// 키워드로 장소를 검색합니다
+searchPlaces();
+
+// 키워드 검색을 요청하는 함수입니다
+function searchPlaces() {
+
+    var keyword = document.getElementById('keyword').value;
+
+    if (!keyword.replace(/^\s+|\s+$/g, '')) {
+        alert('키워드를 입력해주세요!');
+        return false;
+    }
+
+    // 장소검색 객체를 통해 키워드로 장소검색을 요청합니다
+    ps.keywordSearch( keyword, placesSearchCB); 
+}
+
+// 장소검색이 완료됐을 때 호출되는 콜백함수 입니다
+function placesSearchCB(data, status, pagination) {
+    if (status === kakao.maps.services.Status.OK) {
+
+        // 정상적으로 검색이 완료됐으면
+        // 검색 목록과 마커를 표출합니다
+        displayPlaces(data);
+
+        // 페이지 번호를 표출합니다
+        //displayPagination(pagination);
+
+    } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
+
+        alert('검색 결과가 존재하지 않습니다.');
+        return;
+
+    } else if (status === kakao.maps.services.Status.ERROR) {
+
+        alert('검색 결과 중 오류가 발생했습니다.');
+        return;
+
+    }
+}
+
+function displayPlaces(places) {
+
+var listEl = document.getElementById('placesList'), 
+menuEl = document.getElementById('menu_wrap'),
+fragment = document.createDocumentFragment(), 
+bounds = new kakao.maps.LatLngBounds(), 
+listStr = '';
+
+// 검색 결과 목록에 추가된 항목들을 제거합니다
+removeAllChildNods(listEl);
+
+// 지도에 표시되고 있는 마커를 제거합니다
+removeMarker();
+
+for ( var i=0; i<places.length; i++ ) {
+//서울좌표 :37.566826, 126.9786567
+    // 마커를 생성하고 지도에 표시합니다
+    var placePosition = new kakao.maps.LatLng(places[i].y, places[i].x),
+        marker = addMarker(placePosition, i), //addmarker함수에서 마커 표시해줌
+        itemEl = getListItem(i, places[i]); // 검색 결과 항목 Element를 생성합니다
+
+    // 검색된 장소 위치를 기준으로 지도 범위를 재설정하기위해
+    // LatLngBounds 객체에 좌표를 추가합니다
+    bounds.extend(placePosition);
+
+    // 마커와 검색결과 항목에 mouseover 했을때
+    // 해당 장소에 인포윈도우에 장소명을 표시합니다
+    // mouseout 했을 때는 인포윈도우를 닫습니다
+    (function(marker, title) {
+        kakao.maps.event.addListener(marker, 'mouseover', function() {
+            displayInfowindow(marker, title);
+        });
+
+        kakao.maps.event.addListener(marker, 'mouseout', function() {
+            infowindow.close();
+        });
+
+        itemEl.onmouseover =  function () {
+            displayInfowindow(marker, title);
+        };
+
+        itemEl.onmouseout =  function () {
+            infowindow.close();
+        };
+    })(marker, places[i].place_name);
+
+    fragment.appendChild(itemEl); //목록 나오는부분
+}
+
+// 검색결과 항목들을 검색결과 목록 Element에 추가합니다
+listEl.appendChild(fragment);
+menuEl.scrollTop = 0;
+
+// 검색된 장소 위치를 기준으로 지도 범위를 재설정합니다
+map.setBounds(bounds);
+}
+
+// 검색결과 항목을 Element로 반환하는 함수입니다
+function getListItem(index, places) {
+
+var el = document.createElement('li'),
+itemStr = '<span class="markerbg marker_' + (index+1) + '"></span>' +
+            '<div class="info">' +
+            '   <h5>' + places.place_name + '</h5>';
+
+if (places.road_address_name) {
+    itemStr += '    <span>' + places.road_address_name + '</span>' +
+                '   <span class="jibun gray">' +  places.address_name  + '</span>';
+} else {
+    itemStr += '    <span>' +  places.address_name  + '</span>'; 
+}
+             
+  itemStr += '  <span class="tel">' + places.phone  + '</span>' +
+            '</div>';           
+
+el.innerHTML = itemStr;
+el.className = 'item';
+
+return el;
+}
+
+// 마커를 생성하고 지도 위에 마커를 표시하는 함수입니다
+function addMarker(position, idx, title) {
+var imageSrc = 'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/marker_number_blue.png', // 마커 이미지 url, 스프라이트 이미지를 씁니다
+    imageSize = new kakao.maps.Size(36, 37),  // 마커 이미지의 크기
+    imgOptions =  {
+        spriteSize : new kakao.maps.Size(36, 691), // 스프라이트 이미지의 크기
+        spriteOrigin : new kakao.maps.Point(0, (idx*46)+10), // 스프라이트 이미지 중 사용할 영역의 좌상단 좌표
+        offset: new kakao.maps.Point(13, 37) // 마커 좌표에 일치시킬 이미지 내에서의 좌표
+    },
+    markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize, imgOptions),
+        marker = new kakao.maps.Marker({
+        position: position, // 마커의 위치
+        image: markerImage 
+    });
+
+//marker.setMap(map); // 지도 위에 마커를 표출합니다 //이 부분 주석하면 마크 안보임
+markers.push(marker);  // 배열에 생성된 마커를 추가합니다
+
+return marker;
+}
+
+// 지도 위에 표시되고 있는 마커를 모두 제거합니다
+function removeMarker() {
+for ( var i = 0; i < markers.length; i++ ) {
+    markers[i].setMap(null);
+  }   
+  markers = [];
+}
+
+// 검색결과 목록 하단에 페이지번호를 표시는 함수입니다
+function displayPagination(pagination) {
+var paginationEl = document.getElementById('pagination'),
+    fragment = document.createDocumentFragment(),
+    i; 
+
+// 기존에 추가된 페이지번호를 삭제합니다
+while (paginationEl.hasChildNodes()) {
+    paginationEl.removeChild (paginationEl.lastChild);
+}
+
+for (i=1; i<=pagination.last; i++) {
+    var el = document.createElement('a');
+    el.href = "#";
+    el.innerHTML = i;
+
+    if (i===pagination.current) {
+        el.className = 'on';
+    } else {
+        el.onclick = (function(i) {
+            return function() {
+                pagination.gotoPage(i);
+            }
+        })(i);
+    }
+
+    fragment.appendChild(el);
+  }
+  paginationEl.appendChild(fragment);
+}
+
+// 검색결과 목록 또는 마커를 클릭했을 때 호출되는 함수입니다
+// 인포윈도우에 장소명을 표시합니다
+function displayInfowindow(marker, title) {
+  var content = '<div style="padding:5px;z-index:1;">' + title + '</div>';
+
+  infowindow.setContent(content);
+  infowindow.open(map, marker);
+}
+
+// 검색결과 목록의 자식 Element를 제거하는 함수입니다
+function removeAllChildNods(el) {   
+  while (el.hasChildNodes()) {
+      el.removeChild (el.lastChild);
+  }
+}
+
+/*
+**********************************************************
+2. 더미데이터 준비하기 (제목, 주소, url, 카테고리)
+*/
+const dataSet = [
+    {
+      title: "옛날오막집",
+      address: "부산 서구 구덕로 274번길 14",
+      url: "https://www.youtube.com/watch?v=P-jNCiLMQN4",
+      category: "한식",
+    },
+    {
+      title: "이레옥",
+      address: "부산 해운대구 마린시티3로 51",
+      url: "https://www.youtube.com/watch?v=8VPVbZdWx5M",
+      category: "한식",
+    },
+    {
+      title: "호랑이젤라떡",
+      address: "부산광역시 해운대구 달맞이길62번길 38",
+      url: "https://www.youtube.com/watch?v=lwUfDmTO1fw",
+      category: "디저트",
+    },
+    {
+      title: "도토리다방",
+      address: "부산 부산진구 전포동 355-24",
+      url: "https://youtu.be/80N7GA6N3J8",
+      category: "디저트",
+    },
+    {
+      title: "감천문화마을",
+      address: "부산 사하구 감천동 10-63",
+      url: "https://www.youtube.com/watch?v=F7gOKQxkDyM",
+      category: "관광지",
+    },
+    {
+      title: "아홉산숲",
+      address: "부산 기장군 철마면 미동길 37-1",
+      url: "https://youtu.be/le-sUzzanho",
+      category: "관광지",
+    },
+    {
+      title: "태화반점",
+      address: "부산 남구 분포로 115",
+      url: "https://youtu.be/C0Ukj2IVbUQ",
+      category: "중식",
+    },
+    {
+      title: "백객도",
+      address: "부산 동래구 금정마을로 70",
+      url: "https://youtu.be/yHeO68C5Mnw",
+      category: "중식",
+    },
+    {
+      title: "백산키친",
+      address: "부산 동구 조방로 14",
+      url: "https://youtu.be/_qA7GZef9Vw",
+      category: "일식",
+    },
+    {
+      title: "소수인",
+      address: "부산 부산진구 가야대로750번길 17",
+      url: "https://youtu.be/eADLehaHRyc",
+      category: "일식",
+    },
+    {
+      title: "용이초밥",
+      address: "부산광역시 수영구 광남로108번길 11",
+      url: "https://youtu.be/PGfaVXGFDds",
+      category: "회/초밥",
+    },
+    {
+      title: "모시모시",
+      address: "부산광역시 금정구 금강로 271-5",
+      url: "https://youtu.be/4V7Qnq75Npk",
+      category: "회/초밥",
+    },
+    {
+      title: "도우개러지",
+      address: "부산 부산진구 서전로46번길 8",
+      url: "https://youtu.be/HzyS6AqI4Sk",
+      category: "양식",
+    },
+    {
+      title: "시티바캉스",
+      address: "부산 수영구 광안로21번가길 11-1",
+      url: "https://youtu.be/NbugO7K86qo",
+      category: "양식",
+    },
+    {
+      title: "맛나집",
+      address: "부산 북구 덕천2길 47",
+      url: "https://youtu.be/-PhbE2I9CHw",
+      category: "분식",
+    },
+    {
+      title: "백설대학",
+      address: "부산 영도구 웃서발로 74",
+      url: "https://youtu.be/geFfohh9Xfw",
+      category: "분식",
+    },
+    {
+      title: "맛나집",
+      address: "부산 북구 덕천2길 47",
+      url: "https://youtu.be/-PhbE2I9CHw",
+      category: "분식",
+    },
+    {
+      title: "백설대학",
+      address: "부산 영도구 웃서발로 74",
+      url: "https://youtu.be/geFfohh9Xfw",
+      category: "분식",
+    },
+    {
+      title: "종로도담",
+      address: "서울특별시 종로구 삼봉로 78",
+      url: "https://youtu.be/QtB0mH1HddU",
+      category: "한식",
+    },
+    {
+      title: "5412",
+      address: "서울특별시 용산구 이태원로54가길12 지하1층",
+      url: "https://youtu.be/vHJMoksr__8",
+      category: "한식",
+    },
+    {
+      title: "꺼거",
+      address: "서울특별시 용산구 한강대로48길 10",
+      url: "https://youtu.be/n4nTJZGWarY",
+      category: "중식",
+    },
+    {
+      title: "티엔미미",
+      address: "서울특별시 종로구 자하문로7길 19 1층",
+      url: "https://youtu.be/TKYLy2Z1sP0",
+      category: "중식",
+    },
+    {
+      title: "히노야마",
+      address: "서울 양천구 목동서로 349",
+      url: "https://youtu.be/iNGHueCNbnA",
+      category: "일식",
+    },
+    {
+      title: "시카노이에",
+      address: "서울 종로구 경희궁1길 32",
+      url: "https://youtu.be/zkJ23_S2KC4",
+      category: "일식",
+    },
+    {
+      title: "홍스시",
+      address: "경기 김포시 장기동 1366 1층",
+      url: "https://youtu.be/ljC9TvavVAo",
+      category: "회/초밥",
+    },
+    {
+      title: "바다쏭",
+      address: "인천광역시 연수구 능허대로 16",
+      url: "https://youtu.be/zkJ23_S2KC4",
+      category: "디저트",
+    },
+    {
+      title: "코르네트노츠",
+      address: "인천광역시 연수구 아트센터대로 149 봄동 Spring 102",
+      url: "https://youtu.be/gPyzP4LFvVE",
+      category: "양식",
+    },
+    {
+      title: "금성해장국",
+      address: "강원 강릉시 남문길 27-1",
+      url: "https://youtu.be/kdfgqAKBM4s",
+      category: "한식",
+    },
+    {
+      title: "순두부 짬뽕 초당애",
+      address: "강원 강릉시 해안로 388 초당애(씨에스타 건물 2층)",
+      url: "https://youtu.be/cAerFjWhyBY",
+      category: "한식",
+    },
+    {
+      title: "산치식당",
+      address: "강원 강릉시 임영로163번길 9 1층",
+      url: "https://youtu.be/_yb3yjMRdWU",
+      category: "양식",
+    },
+    {
+      title: "롱타우객잔",
+      address: "강원 춘천 석사동 802-2",
+      url: "https://youtu.be/DBTAqJc0m8g",
+      category: "중식",
+    },
+    {
+      title: "장안횟집",
+      address: "강원 강릉시 사천면 진리항구길 51",
+      url: "https://youtu.be/3VsZGlqwdgA",
+      category: "회/초밥",
+    },
+    {
+      title: "이츠모라멘",
+      address: "강원 강릉시 초당원길 34",
+      url: "https://youtu.be/2g8p54Smbvw",
+      category: "일식",
+    },
+    {
+      title: "여고시절 카레떡볶이",
+      address: "강원 강릉시 신대학길 22-6",
+      url: "https://youtu.be/U5MAiZp8P3I",
+      category: "분식",
+    },
+    {
+      title: "초당110",
+      address: "강원 강릉시 초당순두부길 110",
+      url: "https://youtu.be/YogK6gHgkVM",
+      category: "디저트",
+    },
+    {
+      title: "안흥찐빵마을",
+      address: "강원도 횡성군 안흥면 서동로 1088",
+      url: "https://youtu.be/jVqrOhVcgmk",
+      category: "관광지",
+    },
+    {
+      title: "허균허난설헌 기념공원",
+      address: "강원 강릉시 난설헌로193번길 1-16",
+      url: "https://youtu.be/UmkeswVupxY",
+      category: "관광지",
+    },
+    {
+      title: "포베오 카페",
+      address: "전남 함평군 함평읍 주포로 395",
+      url: "https://youtu.be/iMtWajveUOQ",
+      category: "디저트",
+    },
+    {
+      title: "아르티오",
+      address: "광주 남구 원산2길 3",
+      url: "https://youtu.be/R6GRN2oBo8w",
+      category: "디저트",
+    },
+    {
+      title: "큰엄마 연탄구이",
+      address: "광주 북구 일곡로 39",
+      url: "https://youtu.be/jXcRHli54rA",
+      category: "한식",
+    },
+    {
+      title: "칠성옥",
+      address: "전남 담양군 담양읍 추성로 1202 칠성옥",
+      url: "https://youtu.be/mBIOJmDplqY",
+      category: "한식",
+    },
+    {
+      title: "수보라횟집",
+      address: "전남 무안군 망운면 톱머리길 103",
+      url: "https://youtu.be/98qAv0GIxdI",
+      category: "회/초밥",
+    },
+    {
+      title: "수보라횟집",
+      address: "전남 무안군 망운면 톱머리길 103",
+      url: "https://youtu.be/98qAv0GIxdI",
+      category: "회/초밥",
+    },
+    {
+      title: "곡성가든",
+      address: "전남 곡성군 옥과면 배감길 16-19",
+      url: "https://youtu.be/Ge3v0cUxUUI",
+      category: "양식",
+    },
+    {
+      title: "와인동굴",
+      address: "전남 광양시 광양읍 강정길 33",
+      url: "https://youtu.be/xP0Gjc8cl80",
+      category: "관광지",
+    },
+    {
+      title: "와온해변",
+      address: "전남 순천시 해룡면 와온길 133 와온관광문화관",
+      url: "https://youtu.be/dPwulaTHZ4s",
+      category: "관광지",
+    },
+    {
+      title: "단풍이온다",
+      address: "전남 장성군 장성읍 충무1길 4",
+      url: "https://youtu.be/KF5gAl_fj3o",
+      category: "양식",
+    },
+    {
+      title: "오동동김밥",
+      address: "전남 여수시 오동도로 61-12",
+      url: "https://youtu.be/o0SqGSyBMgo",
+      category: "분식",
+    },
+    {
+      title: "동키스",
+      address: "전남 목포시 수문로21",
+      url: "https://youtu.be/JUDBu6hCuo0",
+      category: "일식",
+    },
+    {
+      title: "경양카츠",
+      address: "전남 목포시 원형동로9",
+      url: "https://youtu.be/SPqQscFg4og",
+      category: "일식",
+    },
+    {
+      title: "관우식당",
+      address: "전남 목포시 산정안로 14-3",
+      url: "https://youtu.be/-K4G478ggqA",
+      category: "중식",
+    },
+    {
+      title: "단풍이온다",
+      address: "전남 장성군 장성읍 충무1길 4",
+      url: "https://youtu.be/KF5gAl_fj3o",
+      category: "양식",
+    },
+    {
+      title: "외도널서리",
+      address: "경남 거제시 일운면 구조라로4길 21",
+      url: "https://youtu.be/6kIIxm2ShO4",
+      category: "디저트",
+    },
+    {
+      title: "리브래브",
+      address: "창원시 진해구 속천로 140-2 2층",
+      url: "https://youtu.be/lcMX0m1KJV0",
+      category: "양식",
+    },
+    {
+      title: "웅아물회",
+      address: "거제시 일운면 지세포해안로 171",
+      url: "https://youtu.be/LqMZZ2AhCcQ",
+      category: "회/초밥",
+    },
+    {
+      title: "수제국수",
+      address: "창원시 진해구 진해대로975번길 7-7",
+      url: "https://youtu.be/eRnF5MC7riw",
+      category: "한식",
+    },
+    {
+      title: "상족암국립공원",
+      address: "경남 고성군 하이면 덕명5길 42-23",
+      url: "https://youtu.be/_8kgki7uuoQ",
+      category: "관광지",
+    },
+    {
+      title: "배말칼국수김밥",
+      address: "경남 사천시 군영숲길 73",
+      url: "https://youtu.be/NJMpKphX-dc",
+      category: "분식",
+    },
+    {
+      title: "조밀",
+      address: "경북 경주시 첨성로81번길 28-13",
+      url: "https://youtu.be/D7ZT-7UZS5c",
+      category: "양식",
+    },
+    {
+      title: "호미곶",
+      address: "경북 포항시 남구 호미곶면 대보리",
+      url: "https://youtu.be/yztSthiPncg",
+      category: "관광지",
+    },
+    {
+      title: "스페이스워크",
+      address: "경북 포항시 북구 두호동",
+      url: "https://youtu.be/HIDpA86RbTQ",
+      category: "관광지",
+    },
+    {
+      title: "돌코롱",
+      address: "경산시 진량읍 황제1길 98-5 한옥",
+      url: "https://youtu.be/LqZzQYj1aCU",
+      category: "디저트",
+    },
+    {
+      title: "가봉반과",
+      address: "경주시 첨성로 61-7",
+      url: "https://youtu.be/uzTWzzf3wD8",
+      category: "디저트",
+    },
+    {
+      title: "꽃길만걸으새우",
+      address: "경북 경주시 포석로1068번길 10",
+      url: "https://youtu.be/pzY-9Ztrkc8",
+      category: "회/초밥",
+    },
+    {
+      title: "소옥",
+      address: "경주시 포석로1050번길 29 1층",
+      url: "https://youtu.be/hb7XlzZtO9Q",
+      category: "한식",
+    },
+    {
+      title: "료코",
+      address: "경주시 첨성로99번길 27",
+      url: "https://youtu.be/ifWJnLVTc3I",
+      category: "일식",
+    },
+    {
+      title: "호랑이카츠",
+      address: "경주시 서정로 57번길 14",
+      url: "https://youtu.be/db7gzwy01Zc",
+      category: "일식",
+    },
+    {
+      title: "교동 개미분식",
+      address: "대구광역시 중구 동성로 70-10",
+      url: "https://youtu.be/PYRQy4tzISk",
+      category: "분식",
+    },
+    {
+      title: "신식반점",
+      address: "경북 경산시 성암로15길 28",
+      url: "https://youtu.be/n3fgqTFEto0",
+      category: "중식",
+    },
+    {
+      title: "라룬",
+      address: "충청북도 청주시 청원구 율봉로 268",
+      url: "https://youtu.be/zHyW8OSBtt0",
+      category: "양식",
+    },
+    {
+      title: "참살이오리전문점",
+      address: "충북 청주시 상당구 용암북로 124-1",
+      url: "https://youtu.be/44uKHeWXQWg",
+      category: "한식",
+    },
+    {
+      title: "후라토식당",
+      address: "충북 충주시 호암토성2로 3 선우프라자 2층 201호",
+      url: "https://youtu.be/vyFKnHjy13E",
+      category: "일식",
+    },
+    {
+      title: "스시키타이",
+      address: "충북 청주시 흥덕구 진재로109번길 15",
+      url: "https://youtu.be/ZyGC8klT3E4",
+      category: "회/초밥",
+    },
+    {
+      title: "봄브레드",
+      address: "청주시 분평동 안뜸로 47번길 50, 1층",
+      url: "https://youtu.be/L1rXKWeFGxc",
+      category: "디저트",
+    },
+    {
+      title: "이끼터널",
+      address: "충북 단양군 적성면 애곡리 129-2",
+      url: "https://youtu.be/fiZTEpiLTvw",
+      category: "관광지",
+    },
+    {
+      title: "용문사",
+      address: "경기 양평군 용문면 용문산로 782 용문사",
+      url: "https://youtu.be/4JMQ5Mzd-tA",
+      category: "관광지",
+    },
+    {
+      title: "요기루",
+      address: "대전 유성구 노은동 553-6",
+      url: "https://youtu.be/nOUW4JeimzY",
+      category: "중식",
+    },
+    {
+      title: "다수제",
+      address: "경기 부천시 장말로199번길 32",
+      url: "https://youtu.be/q43dqgNMW-M",
+      category: "분식",
+    },
+    {
+      title: "공주분식",
+      address: "대전 중구 문창로 97 1층 공주분식",
+      url: "https://youtu.be/MpbtXJAlKJ4",
+      category: "분식",
+    },
+    {
+      title: "아키아키",
+      address: "충북 청주시 흥덕구 1순환로 528",
+      url: "https://youtu.be/KVKgLnRZ55A",
+      category: "일식",
+    },
+
+
+
+  ];
+
+var geocoder = new kakao.maps.services.Geocoder();
+
+function getCoordsByAddress(address) {
+  // promise 형태로 반환
+  return new Promise((resolve, reject) => {
+    // 주소로 좌표를 검색합니다
+    geocoder.addressSearch(address, function (result, status) {
+      // 정상적으로 검색이 완료됐으면
+      if (status === kakao.maps.services.Status.OK) {
+        var coords = new kakao.maps.LatLng(result[0].y, result[0].x);
+        return resolve(coords);
+      }
+      reject(new Error("getCoordsByAddress Error: not valid Address"));
+    });
+  });
+}
+setMap(dataSet);
+
+
+function getContent(data){
+  // 유튜브 섬네일 id 가져오기
+  let replaceUrl = data.url;
+  let finUrl = "";
+  replaceUrl = replaceUrl.replace("https://youtu.be/", "");
+  replaceUrl = replaceUrl.replace("https://www.youtube.com/embed/", "");
+  replaceUrl = replaceUrl.replace("https://www.youtube.com/watch?v=", "");
+  finUrl = replaceUrl.split("&")[0];
+
+  // 인포윈도우 가공하기
+  return `
+  <div class="infowindow">
+      <div class="infowindow-img-container">
+        <img
+          src="https://img.youtube.com/vi/${finUrl}/mqdefault.jpg"
+          class="infowindow-img"
+        />
+      </div>
+      <div class="infowindow-body">
+        <h5 class="infowindow-title">${data.title}</h5>
+        <p class="infowindow-address">${data.address}</p>
+        <a href="${data.url}" class="infowindow-btn" target="_blank">영상이동</a>
+      </div>
+    </div>
+  `;
+}
+
+async function setMap(dataSet) {
+  for (var i = 0; i < dataSet.length; i++) {
+    let coords = await getCoordsByAddress(dataSet[i].address);
+
+    // 마커를 생성합니다
+    var marker = new kakao.maps.Marker({
+      map: map, // 마커를 표시할 지도
+      position: coords, // 마커를 표시할 위치
+    });
+
+    markerArray.push(marker);
+
+    // 마커에 표시할 인포윈도우를 생성합니다
+    var infowindow = new kakao.maps.InfoWindow({
+      content: getContent(dataSet[i]), // 인포윈도우에 표시할 내용
+    });
+
+    infowindowArray.push(infowindow);
+
+    // 마커에 mouseover 이벤트와 mouseout 이벤트를 등록합니다
+    // 이벤트 리스너로는 클로저를 만들어 등록합니다
+    // for문에서 클로저를 만들어 주지 않으면 마지막 마커에만 이벤트가 등록됩니다
+    kakao.maps.event.addListener(
+      marker,
+      "click",
+      makeOverListener(map, marker, infowindow, coords)
+    );
+    // 커스텀: 맵을 클릭하면 현재 나타난 인포윈도우가 없어지게끔
+    kakao.maps.event.addListener(map, "click", makeOutListener(infowindow));
+  }
+}
+// 인포윈도우를 표시하는 클로저를 만드는 함수입니다
+/* 
+  커스텀
+  1. 클릭시 다른 인포윈도우 닫기
+  2. 클릭한 곳으로 지도 중심 이동하기
+  */
+
+  function makeOverListener(map, marker, infowindow,coords) {
+    return function () {
+      // 1. 클릭시 다른 인포윈도우 닫기
+      closeInfoWindow();
+      infowindow.open(map, marker);
+      // 2. 클릭한 곳으로 지도 중심 옮기기
+      map.panTo(coords);
+    };
+  }
+
+  let infowindowArray = [];
+  function closeInfoWindow(){
+    for(let infowindow of infowindowArray){
+      infowindow.close();
+    }
+  }
+
+  function makeOutListener(infowindow) {
+    return function () {
+      infowindow.close();
+    };
+  }
+
+  /*
+**********************************************
+5. 카테고리 분류
+*/
+const categoryMap = {
+  korea: "한식",
+  china: "중식",
+  japan: "일식",
+  america: "양식",
+  wheat: "분식",
+  dessert: "디저트",
+  sushi: "회/초밥",
+  TouristAttraction: "관광지",
+};
+
+const categoryList = document.querySelector(".category-list");
+categoryList.addEventListener("click",categoryHandler);
+
+function categoryHandler(event){
+  const categoryId = event.target.id;
+  const category = categoryMap[categoryId];
+
+  let categorizedDataSet = [];
+  for (let data of dataSet) {
+    if (data.category === category) {
+      categorizedDataSet.push(data);
+    }
+  }
+
+  //기존 마커 삭제
+  closeMarker();
+
+  //기존 인포윈도우 닫기
+  closeInfoWindow();
+
+  setMap(categorizedDataSet);
+}
+
+let markerArray = [];
+function closeMarker(){
+  for(marker of markerArray){
+    marker.setMap(null);
+  }
+}
+
+
+    </script>

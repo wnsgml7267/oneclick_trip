@@ -18,10 +18,19 @@ html {
 }
 
 nav {
-  background-color: #e69a06;
+  background-color: #aad7f5;
 }
-
-
+.nav-item{
+  font-family: inherit;
+  font-size: 1.6rem;
+  height: 4rem;
+  border: none;
+  color:white;
+}
+.nav-item:hover{
+  color:#19b0ec;
+  cursor: pointer;
+}
 .nav-container {
   padding: 1rem 0;
   display: flex;
@@ -35,13 +44,15 @@ nav {
 }
 
 .nav-contact {
-    font-size: 1.6rem;
+  font-size: 1.6rem;
   border: 0;
   background: none;
   cursor: pointer;
   font-family: inherit;
 }
-
+nav{
+  height: 59px;
+}
 .category-title{
     font-size: 3.5rem;
 }
@@ -71,6 +82,7 @@ nav {
   }
 }
 
+
 body {
   background-image: #34495e;
   background-image: url("https://i.ibb.co/4f16n61/trip-login.png");
@@ -83,9 +95,6 @@ body {
 }
 
 
-nav{
-    height: 59px;
-}
 
 main{
     padding-top: 1.5rem;

@@ -9,7 +9,7 @@
 
 body {
     background-image: #34495e;
-    background-image: url("https://i.ibb.co/jrMfnTb/background.png");
+    background-image: url("https://i.ibb.co/4f16n61/trip-login.png");
     background-repeat: no-repeat;
     -webkit-background-size: cover;
     -moz-background-size: cover;
@@ -41,7 +41,7 @@ body {
 }
 
 .list_table tbody td {
-    text-align: center;
+    text-align:center;
     border-bottom: 1px solid #01A9DB;
     padding: 5px 0;
 }

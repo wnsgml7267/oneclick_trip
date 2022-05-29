@@ -17,11 +17,9 @@ var commentSchema = new Schema({
 var boardSchema = new Schema({
     title: String,
     contents: String,
-    shareG: Number,
-    salePrice: Number,
     id: String,
-    airline: String,
-    flight: String,
+    region: String,
+    region1: String,
     board_date: {type: Date, default: Date.now()},
     comments: [commentSchema]
 });
