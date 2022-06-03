@@ -395,7 +395,7 @@ app.use(expressErrorHandler.httpError(404));
 app.use(errorHandler);
 
 var server = http.createServer(app);
-// ===== 서버 시작 ===== //
+// ===== 서버 시작 ===== http://58.234.198.201:3000/public/login.html, http://localhost:3000/public/login.html //
 server.listen(app.get('port'), function(){
     console.log('서버가 시작되었습니다. 포트 : ' + app.get('port'));
     connectDB();
