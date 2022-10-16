@@ -7,10 +7,14 @@
 - 허위 광고의 방지를 통해 여행 지역에 대한 신뢰성을 증가시킬 수 있다.
 - 여행이라는 목적과 별개로 정보수집 혹은 여가시간의 활용성을 확보할 수 있다.
 
+<br>
+
 ## ❕ 서비스 소개
 - 여행 추천 및 커뮤니티 서비스를 목적으로 한다.
 - 카카오 API를 연동하여 지도를 생성하고 지도에 추천 여행지 및 맛집을 마커로 나타내어 한 눈에 볼 수 있도록 한다.
 - 마커 클릭 시 주소 및 유튜브 리뷰 영상 링크를 연동해 정보를 접하고 추가 기능을 카테고리화 시켜 본인만의 여행 계획을 세우는 데 도움을 줄 수 있다.
+
+<br>
 
 ## ⭐ 성과 및 기대효과
 - 원하는 지역에서 카테고리를 통해 필요한 정보를 찾는 시간 단축이 가능하다.
@@ -20,7 +24,7 @@
 <br>
 
 ![image](https://user-images.githubusercontent.com/82314940/196020876-002ee66f-e4d1-44e6-8e6e-880e00eda4f4.png)
-![image](https://user-images.githubusercontent.com/82314940/196021038-95a6a6d8-c168-4fac-be0c-27ab30afb8e0.png)
+![image](https://user-images.githubusercontent.com/82314940/196022142-7cb795bc-9c05-46ca-8839-159c8b1c3d04.png)
 ![image](https://user-images.githubusercontent.com/82314940/196021326-8448fc55-65ad-4576-b429-b5b8d0390fb2.png)
 ![image](https://user-images.githubusercontent.com/82314940/196021375-b94cc6bc-2da5-48a5-8f19-708505bd9d30.png)
 ![image](https://user-images.githubusercontent.com/82314940/196021436-6517fe9b-779d-47f9-9162-3645b32e489d.png)
